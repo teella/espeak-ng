@@ -1018,9 +1018,8 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 		if (new_sentence)
 			terminator |= CLAUSE_TYPE_SENTENCE; // carry forward an end-of-sentence indicator
 		max_clause_pause += clause_pause;
-		new_sentence2 = false;
-	}
-	else {
+		new_sentence2 = false;		
+	} else {
 		max_clause_pause = clause_pause;
 		new_sentence2 = new_sentence;
 	}
@@ -1079,8 +1078,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 		if (prev_in_save != 0) {
 			prev_in = prev_in_save;
 			prev_in_save = 0;
-		}
-		else if (source_index > 0)
+		} else if (source_index > 0)
 			utf8_in2(&prev_in, &source[source_index - 1], 1);
 
 		unsigned int prev_source_index = source_index;
@@ -1088,8 +1086,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 		if (char_inserted) {
 			c = char_inserted;
 			char_inserted = 0;
-		}
-		else {
+		} else {
 			source_index += utf8_in(&cc, &source[source_index]);
 			c = cc;
 		}
@@ -1111,8 +1108,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 				c = ' ';
 				prev_in_save = c;
 				source_index--;
-			}
-			else {
+			} else {
 				embedded_count += EmbeddedCommand(&source_index);
 				prev_in_save = prev_in;
 				// replace the embedded command by spaces
@@ -1137,8 +1133,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 				source_index++;
 				c = ' ';
 			}
-		}
-		else if ((option_sayas2 & 0xf0) == SAYAS_DIGITS) {
+		} else if ((option_sayas2 & 0xf0) == SAYAS_DIGITS) {
 			if (iswdigit(c)) {
 				count_sayas_digits++;
 				if (count_sayas_digits > (option_sayas2 & 0xf)) {
@@ -1147,16 +1142,14 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 					space_inserted = true;
 					count_sayas_digits = 0;
 				}
-			}
-			else {
+			} else {
 				count_sayas_digits = 0;
 				if (iswdigit(prev_out)) {
 					c = ' ';
 					space_inserted = true;
 				}
 			}
-		}
-		else if ((option_sayas2 & 0x10) == 0) {
+		} else if ((option_sayas2 & 0x10) == 0) {
 			// speak as words
 
 			if ((c == 0x92) || (c == 0xb4) || (c == 0x2019) || (c == 0x2032))
@@ -1190,8 +1183,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 				if (IsAlpha(prev_out)) {
 					if (tr->langopts.tone_numbers && IsDigit09(c) && !IsDigit09(next_in)) {
 						// allow a tone number as part of the word
-					}
-					else {
+					} else {
 						c = ' '; // ensure we have an end-of-word terminator
 						space_inserted = true;
 					}
@@ -1203,15 +1195,13 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 					c = ' '; // terminate digit string with a space
 					space_inserted = true;
 				}
-			}
-			else { // Prev output is not digit
+			} else { // Prev output is not digit
 				if (prev_in == ',') {
 					// Workaround for several consecutive commas —
 					// replace current character with space
 					if (c == ',')
 						c = ' ';
-				}
-				else {
+				} else {
 					decimal_sep_count = false;
 				}
 			}
@@ -1238,8 +1228,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 
 						if (!IsBracket(prev_out)) // ?? perhaps only set FLAG_NOSPACE for . - /  (hyphenated words, URLs, etc)
 							next_word_flags |= FLAG_NOSPACE;
-					}
-					else {
+					} else {
 						if (iswupper(c))
 							word_flags |= FLAG_FIRST_UPPER;
 
@@ -1279,24 +1268,21 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 							c = 0x2c8; // stress marker
 							syllable_marked = true;
 						}
-					}
-					else {
+					} else {
 						if (iswlower(prev_in)) {
 							// lower case followed by upper case, possibly CamelCase
-							if (UpperCaseInWord(tr, &sbuf[ix], c) == 0) { // start a new word
+							if ((prev_out != ' ') && UpperCaseInWord(tr, &sbuf[ix], c) == 0) { // start a new word
 								c = ' ';
 								space_inserted = true;
 								prev_in_save = c;
 							}
-						}
-						else if ((c != ' ') && iswupper(prev_in) && iswlower(next_in)) {
+						} else if ((c != ' ') && iswupper(prev_in) && iswlower(next_in)) {
 							int next2_in;
 							utf8_in(&next2_in, &source[source_index + next_in_nbytes]);
 
 							if ((tr->translator_name == L('n', 'l')) && (letter_count == 2) && (c == 'j') && (prev_in == 'I')) {
 								// Dutch words may capitalise initial IJ, don't split
-							}
-							else if (IsAlpha(next2_in)) {
+							} else if ((prev_out != ' ') && IsAlpha(next2_in)) {
 								// changing from upper to lower case, start new word at the last uppercase, if 3 or more letters
 								c = ' ';
 								space_inserted = true;
@@ -1305,8 +1291,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 							}
 						}
 					}
-				}
-				else {
+				} else {
 					if ((all_upper_case) && (letter_count > 2)) {
 						// Flag as plural only English
 						if (tr->translator_name == L('e', 'n') && (c == 's') && (next_in == ' ')) {
@@ -1315,66 +1300,55 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 
 							if (sbuf[ix - 1] == '\'')
 								sbuf[ix - 1] = ' ';
-						}
-						else
+						} else
 							all_upper_case = 0; // current word contains lower case letters, not "'s"
-					}
-					else
+					} else
 						all_upper_case = 0;
 				}
-			}
-			else if (c == '-') {
+			} else if (c == '-') {
 				if (!IsSpace(prev_in) && IsAlpha(next_in)) {
 					if (prev_out != ' ') {
 						// previous 'word' not yet ended (not alpha or numeric), start new word now.
 						c = ' ';
 						space_inserted = true;
-					}
-					else {
+					} else {
 						// '-' between two letters is a hyphen, treat as a space
 						word_flags |= FLAG_HYPHEN;
 						if (word_count > 0)
 							words[word_count - 1].flags |= FLAG_HYPHEN_AFTER;
 						c = ' ';
 					}
-				}
-				else if ((prev_in == ' ') && (next_in == ' ')) {
+				} else if ((prev_in == ' ') && (next_in == ' ')) {
 					// ' - ' dash between two spaces, treat as pause
 					c = ' ';
 					pre_pause_add = 4;
-				}
-				else if (next_in == '-') {
+				} else if (next_in == '-') {
 					// double hyphen, treat as pause
 					source_index++;
 					c = ' ';
 					pre_pause_add = 4;
-				}
-				else if ((prev_out == ' ') && IsAlpha(prev_out2) && !IsAlpha(prev_in)) {
+				} else if ((prev_out == ' ') && IsAlpha(prev_out2) && !IsAlpha(prev_in)) {
 					// insert extra space between a word + space + hyphen, to distinguish 'a -2' from 'a-2'
 					sbuf[ix++] = ' ';
 					words[word_count].start++;
 				}
-			}
-			else if (c == '.') {
+			} else if (c == '.') {
 				if (prev_out == '.') {
 					// multiple dots, separate by spaces. Note >3 dots has been replaced by elipsis
 					c = ' ';
 					space_inserted = true;
-				}
-				else if ((word_count > 0) && !(words[word_count - 1].flags & FLAG_NOSPACE) && IsAlpha(prev_in)) {
+				} else if ((word_count > 0) && !(words[word_count-1].flags & FLAG_NOSPACE) && IsAlpha(prev_in)) {
 					// dot after a word, with space following, probably an abbreviation
 					words[word_count - 1].flags |= FLAG_HAS_DOT;
 
 					if (IsSpace(next_in) || (next_in == '-'))
 						c = ' '; // remove the dot if it's followed by a space or hyphen, so that it's not pronounced
 				}
-			}
-			else if (c == '\'') {
+			} else if (c == '\'') {
 				if (((prev_in == '.' && next_in == 's') || iswalnum(prev_in)) && IsAlpha(next_in)) {
 					// between two letters, or in an abbreviation (eg. u.s.a.'s). Consider the apostrophe as part of the word
 					single_quoted = false;
-				}
-				else if ((tr->langopts.param[LOPT_APOSTROPHE] & 1) && IsAlpha(next_in))
+				} else if ((tr->langopts.param[LOPT_APOSTROPHE] & 1) && IsAlpha(next_in))
 					single_quoted = false; // apostrophe at start of word is part of the word
 				else if ((tr->langopts.param[LOPT_APOSTROPHE] & 2) && IsAlpha(prev_in))
 					single_quoted = false; // apostrophe at end of word is part of the word
@@ -1383,13 +1357,11 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 					single_quoted = false;
 					if (next_in == ' ')
 						source_index++; // skip following space
-				}
-				else {
+				} else {
 					if ((prev_out == 's') && (single_quoted == false)) {
 						// looks like apostrophe after an 's'
 						c = ' ';
-					}
-					else {
+					} else {
 						if (IsSpace(prev_out))
 							single_quoted = true;
 						else
@@ -1399,21 +1371,17 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 						c = ' ';
 					}
 				}
-			}
-			else if (lookupwchar(breaks, c) != 0)
+			} else if (lookupwchar(breaks, c) != 0)
 				c = ' '; // various characters to treat as space
 			else if (iswdigit(c)) {
 				if (tr->langopts.tone_numbers && IsAlpha(prev_out) && !IsDigit(next_in)) {
-				}
-				else if ((prev_out != ' ') && !iswdigit(prev_out)) {
+				} else if ((prev_out != ' ') && !iswdigit(prev_out)) {
 					if ((prev_out != tr->langopts.decimal_sep) || ((decimal_sep_count == true) && (tr->langopts.decimal_sep == ','))) {
 						c = ' ';
 						space_inserted = true;
-					}
-					else
+					} else
 						decimal_sep_count = true;
-				}
-				else if ((prev_out == ' ') && IsAlpha(prev_out2) && !IsAlpha(prev_in)) {
+				} else if ((prev_out == ' ') && IsAlpha(prev_out2) && !IsAlpha(prev_in)) {
 					// insert extra space between a word and a number, to distinguish 'a 2' from 'a2'
 					sbuf[ix++] = ' ';
 					words[word_count].start++;
@@ -1488,8 +1456,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 				char_inserted = 0;
 				space_inserted = false;
 			}
-		}
-		else {
+		} else {
 			if ((ix < (N_TR_SOURCE - 4)))
 				ix += utf8_out(c, &sbuf[ix]);
 		}
@@ -1556,8 +1523,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 					&& iswdigit(pw[2]) && (pw[3] != ' ') && (pw[4] != ' ')) { // don't allow only 1 or 2 digits in the final part
 					pw += 2;
 					ix++; // skip "word"
-				}
-				else {
+				} else {
 					nx = pw - word;
 					memset(word, ' ', nx);
 					nx = pn - number_buf;
@@ -1628,8 +1594,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 					;
 				words[ix].pre_pause = 0;
 			}
-		}
-		else {
+		} else {
 			pre_pause = 0;
 
 			dict_flags = TranslateWord2(tr, word, &words[ix], words[ix].pre_pause);
@@ -1642,6 +1607,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 			if (dict_flags & FLAG_SPELLWORD) {
 				// redo the word, speaking single letters
 				for (pw = word; *pw != ' ';) {
+					memset(number_buf, 0, sizeof(number_buf));
 					memset(number_buf, ' ', 9);
 					nx = utf8_in(&c_temp, pw);
 					memcpy(&number_buf[2], pw, nx);
