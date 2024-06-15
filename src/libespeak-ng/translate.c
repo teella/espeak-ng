@@ -1271,7 +1271,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 					} else {
 						if (iswlower(prev_in)) {
 							// lower case followed by upper case, possibly CamelCase
-							if ((prev_out != ' ') && UpperCaseInWord(tr, &sbuf[ix], c) == 0) { // start a new word
+							if (UpperCaseInWord(tr, &sbuf[ix], c) == 0) { // start a new word
 								c = ' ';
 								space_inserted = true;
 								prev_in_save = c;
@@ -1282,7 +1282,7 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 
 							if ((tr->translator_name == L('n', 'l')) && (letter_count == 2) && (c == 'j') && (prev_in == 'I')) {
 								// Dutch words may capitalise initial IJ, don't split
-							} else if ((prev_out != ' ') && IsAlpha(next2_in)) {
+							} else if (IsAlpha(next2_in)) {
 								// changing from upper to lower case, start new word at the last uppercase, if 3 or more letters
 								c = ' ';
 								space_inserted = true;
@@ -1607,7 +1607,6 @@ void TranslateClauseWithTerminator(Translator* tr, int* tone_out, char** voice_c
 			if (dict_flags & FLAG_SPELLWORD) {
 				// redo the word, speaking single letters
 				for (pw = word; *pw != ' ';) {
-					memset(number_buf, 0, sizeof(number_buf));
 					memset(number_buf, ' ', 9);
 					nx = utf8_in(&c_temp, pw);
 					memcpy(&number_buf[2], pw, nx);
